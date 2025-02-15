@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-py"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Block {
+  number                BigInt   @id
+  hash                  String   @unique
+  parent_hash           String?
+  nonce                 String?
+  sha3_uncles           String?
+  logs_bloom            String?
+  transactions_root     String?
+  state_root            String?
+  receipts_root         String?
+  miner                 String?
+  difficulty            BigInt?
+  total_difficulty      BigInt?
+  extra_data            String?
+  size                  BigInt?
+  gas_limit             BigInt?
+  gas_used              BigInt?
+  timestamp             DateTime?
+  base_fee_per_gas      BigInt?
+  blob_gas_used         BigInt?
+  excess_blob_gas       BigInt?
+  parent_beacon_block_root String?
+  withdrawals_root      String?
+  withdrawals           Json?       // Store as JSON
+  l1_block_number       BigInt?
+  send_count            String?
+  send_root             String?
+  mix_hash              String?
+}
+
