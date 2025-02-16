@@ -1,7 +1,7 @@
 import hypersync
 import asyncio
 import json
-from hypersync import BlockField, JoinMode, TransactionField, LogField, ClientConfig
+from hypersync import BlockField, JoinMode, TransactionField, LogField, ClientConfig, TransactionSelection
 from prisma import Prisma
 from datetime import datetime
 
@@ -22,6 +22,7 @@ async def main():
         to_block=height,
         include_all_blocks=True,
         join_mode=JoinMode.JOIN_ALL,
+        transactions=[TransactionSelection()],
         field_selection=hypersync.FieldSelection(
             block=[
                 BlockField.NUMBER,
@@ -51,7 +52,8 @@ async def main():
                 BlockField.SEND_COUNT,
                 BlockField.SEND_ROOT,
                 BlockField.MIX_HASH,
-            ],
+            ],  
+            
             transaction=[
                 TransactionField.BLOCK_NUMBER,
                 TransactionField.HASH,
@@ -61,12 +63,10 @@ async def main():
                 TransactionField.GAS,
                 TransactionField.GAS_PRICE,
                 TransactionField.INPUT,
-                TransactionField.MAX_PRIORITY_FEE,
                 TransactionField.NONCE,
                 TransactionField.MAX_FEE_PER_GAS,
-                TransactionField.MAX_FEE,
             ],
-
+            
        
         ),
         
@@ -75,7 +75,10 @@ async def main():
     print("Running the query...")
     config = hypersync.StreamConfig(
         hex_output=hypersync.HexOutput.PREFIXED,
+        batch_size=1000000,
     )
+   
+
 
     await client.collect_parquet("data", query, config)
 
