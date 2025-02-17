@@ -18,8 +18,8 @@ async def main():
 
     # The query to run
     query = hypersync.Query(
-        from_block=  height - 200,
-        to_block=height,
+        from_block =  height - 1000000,
+        to_block = height,
         include_all_blocks=True,
         join_mode=JoinMode.JOIN_ALL,
         transactions=[TransactionSelection()],
@@ -53,7 +53,6 @@ async def main():
                 BlockField.SEND_ROOT,
                 BlockField.MIX_HASH,
             ],  
-            
             transaction=[
                 TransactionField.BLOCK_NUMBER,
                 TransactionField.HASH,
@@ -62,9 +61,18 @@ async def main():
                 TransactionField.VALUE,
                 TransactionField.GAS,
                 TransactionField.GAS_PRICE,
+                TransactionField.EFFECTIVE_GAS_PRICE,
+                TransactionField.MAX_PRIORITY_FEE_PER_GAS,
                 TransactionField.INPUT,
                 TransactionField.NONCE,
                 TransactionField.MAX_FEE_PER_GAS,
+                TransactionField.CUMULATIVE_GAS_USED,
+                TransactionField.GAS_USED,
+                TransactionField.CHAIN_ID,
+                TransactionField.STATUS,
+                TransactionField.TRANSACTION_INDEX,
+                TransactionField.BLOCK_HASH
+                
             ],
             
        
