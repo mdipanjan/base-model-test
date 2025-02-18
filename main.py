@@ -1,25 +1,35 @@
 import hypersync
 import asyncio
 import json
+import time
+import logging
+import datetime
 from hypersync import BlockField, JoinMode, TransactionField, LogField, ClientConfig, TransactionSelection
 from prisma import Prisma
 from datetime import datetime
+from tqdm.auto import tqdm
+
+# Set up logging
+logger = logging.getLogger(__name__)
+fmt = "%(filename)-20s:%(lineno)-4d %(asctime)s %(message)s"
+logging.basicConfig(level=logging.INFO, format=fmt,
+                   handlers=[logging.StreamHandler()])
 
 async def main():
-
     db = Prisma()
     await db.connect()
 
     client = hypersync.HypersyncClient(ClientConfig(
         url="https://base.hypersync.xyz",
-    ))
+    ))  
     height = await client.get_height()
-
+    start_block = height - 80000
+    total_blocks = height - start_block
 
     # The query to run
     query = hypersync.Query(
-        from_block =  height - 1000000,
-        to_block = height,
+        from_block=start_block,
+        to_block=height,
         include_all_blocks=True,
         join_mode=JoinMode.JOIN_ALL,
         transactions=[TransactionSelection()],
@@ -80,17 +90,51 @@ async def main():
         
     )
 
-    print("Running the query...")
+    print(f"Starting the stream from block {start_block} to {height}...")
+    start_time = time.time()
+    
     config = hypersync.StreamConfig(
         hex_output=hypersync.HexOutput.PREFIXED,
         batch_size=1000000,
     )
-   
 
+    # Start the stream
+    receiver = await client.stream(query, config)
+    
+    total_processed_blocks = 0
+    total_transactions = 0
 
+    with tqdm(total=total_blocks, desc="Processing blocks", unit="blocks") as pbar:
+        while True:
+            res = await receiver.recv()
+            
+            # exit if the stream finished
+            if res is None:
+                break
+
+            blocks_in_batch = len(res.data.blocks)
+            total_processed_blocks += blocks_in_batch
+            total_transactions += len(res.data.transactions)
+
+            # Update progress bar
+            pbar.update(blocks_in_batch)
+            pbar.set_postfix({
+                "Current height": res.next_block,
+                "Transactions": total_transactions
+            })
+
+    # Store the data in parquet format after streaming is complete
     await client.collect_parquet("data", query, config)
 
+    end_time = time.time()
+    duration = end_time - start_time
 
-  
+    print("\nStream completed!")
+    print(f"Total time taken: {duration:.2f} seconds")
+    print(f"Total blocks processed: {total_processed_blocks}")
+    print(f"Total transactions processed: {total_transactions}")
 
-asyncio.run(main())
+    await db.disconnect()
+
+if __name__ == "__main__":
+    asyncio.run(main())
