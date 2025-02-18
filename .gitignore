@@ -3,3 +3,4 @@ venv/
 __pycache__/
 data/
 PLAN.md
+GAS_PRICE_PREDICTION.md
